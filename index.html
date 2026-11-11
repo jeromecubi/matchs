@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matchs du Week-end</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0f4f8;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            color: #1a365d;
+            margin-bottom: 4px;
+            font-size: 1.8rem;
+        }
+        .names {
+            text-align: center;
+            color: #3182ce;
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #718096;
+            margin-bottom: 30px;
+            font-size: 0.95rem;
+        }
+        .match-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .match-card.veyrier {
+            border-left: 5px solid #38a169;
+        }
+        .match-card.champel {
+            border-left: 5px solid #e53e3e;
+        }
+        .match-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .match-team {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #2d3748;
+        }
+        .edit-btn {
+            background: #edf2f7;
+            border: 1px solid #cbd5e0;
+            border-radius: 6px;
+            padding: 6px 14px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            color: #4a5568;
+            transition: background 0.2s;
+        }
+        .edit-btn:hover {
+            background: #e2e8f0;
+        }
+        .match-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        .detail-item {
+            padding: 10px;
+            background: #f7fafc;
+            border-radius: 8px;
+        }
+        .detail-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: #a0aec0;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+        .detail-value {
+            font-size: 1rem;
+            color: #2d3748;
+            font-weight: 500;
+        }
+        .detail-value.empty {
+            color: #cbd5e0;
+            font-style: italic;
+            font-weight: 400;
+        }
+        .location-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .location-row .detail-value {
+            flex: 1;
+        }
+        .map-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: #38a169;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 6px 12px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            text-decoration: none;
+            white-space: nowrap;
+            transition: background 0.2s;
+        }
+        .map-btn:hover {
+            background: #2f855a;
+        }
+        .map-btn.disabled {
+            background: #e2e8f0;
+            color: #a0aec0;
+            cursor: default;
+            pointer-events: none;
+        }
+        .match-status {
+            margin-top: 14px;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        .status-upcoming {
+            background: #ebf8ff;
+            color: #2b6cb0;
+        }
+        .status-today {
+            background: #fffbeb;
+            color: #b7791f;
+        }
+        .status-past {
+            background: #f0fff4;
+            color: #38a169;
+        }
+        .status-empty {
+            background: #f7fafc;
+            color: #a0aec0;
+        }
+        .form-section {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            display: none;
+        }
+        .form-section.active {
+            display: block;
+        }
+        .form-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 16px;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        .form-group.full {
+            grid-column: 1 / -1;
+        }
+        .form-group label {
+            font-size: 0.8rem;
+            color: #718096;
+            margin-bottom: 4px;
+        }
+        .form-group input {
+            padding: 10px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            color: #2d3748;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: #3182ce;
+            box-shadow: 0 0 0 3px rgba(49,130,206,0.1);
+        }
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 16px;
+        }
+        .btn-save {
+            background: #3182ce;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 10px 20px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        .btn-save:hover {
+            background: #2b6cb0;
+        }
+        .btn-cancel {
+            background: #edf2f7;
+            color: #4a5568;
+            border: none;
+            border-radius: 6px;
+            padding: 10px 20px;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+        .btn-cancel:hover {
+            background: #e2e8f0;
+        }
+        .week-info {
+            text-align: center;
+            color: #a0aec0;
+            font-size: 0.8rem;
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⚽ Matchs du Week-end</h1>
+        <p class="names">Nicola &amp; Alessio</p>
+        <p class="subtitle">Mise à jour chaque lundi</p>
+
+        <!-- Match 1 -->
+        <div class="match-card veyrier" id="card1">
+            <div class="match-header">
+                <span class="match-team" id="team1-name">FC Veyrier</span>
+                <button class="edit-btn" onclick="toggleForm(1)">Modifier</button>
+            </div>
+            <div class="match-details">
+                <div class="detail-item">
+                    <div class="detail-label">Adversaire</div>
+                    <div class="detail-value" id="m1-opponent">—</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Date & Heure</div>
+                    <div class="detail-value" id="m1-datetime">—</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Lieu</div>
+                    <div class="location-row">
+                        <div class="detail-value" id="m1-location">—</div>
+                        <a class="map-btn disabled" id="m1-map" href="#" target="_blank" rel="noopener">🗺️ Itinéraire</a>
+                    </div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Catégorie</div>
+                    <div class="detail-value" id="m1-category">D2</div>
+                </div>
+            </div>
+            <div class="match-status status-empty" id="m1-status">Aucun match planifié</div>
+        </div>
+
+        <!-- Form 1 -->
+        <div class="form-section" id="form1">
+            <div class="form-title">Modifier – FC Veyrier</div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Adversaire</label>
+                    <input type="text" id="f1-opponent" placeholder="Ex: FC Servette U15">
+                </div>
+                <div class="form-group">
+                    <label>Catégorie</label>
+                    <input type="text" id="f1-category" placeholder="D2" value="D2">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Date</label>
+                    <input type="date" id="f1-date">
+                </div>
+                <div class="form-group">
+                    <label>Heure</label>
+                    <input type="time" id="f1-time">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group full">
+                    <label>Lieu / Terrain</label>
+                    <input type="text" id="f1-location" placeholder="Ex: Terrain 3, Veyrier">
+                </div>
+            </div>
+            <div class="form-actions">
+                <button class="btn-save" onclick="saveMatch(1)">Enregistrer</button>
+                <button class="btn-cancel" onclick="toggleForm(1)">Annuler</button>
+            </div>
+        </div>
+
+        <!-- Match 2 -->
+        <div class="match-card champel" id="card2">
+            <div class="match-header">
+                <span class="match-team" id="team2-name">FC Champel</span>
+                <button class="edit-btn" onclick="toggleForm(2)">Modifier</button>
+            </div>
+            <div class="match-details">
+                <div class="detail-item">
+                    <div class="detail-label">Adversaire</div>
+                    <div class="detail-value" id="m2-opponent">—</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Date & Heure</div>
+                    <div class="detail-value" id="m2-datetime">—</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Lieu</div>
+                    <div class="location-row">
+                        <div class="detail-value" id="m2-location">—</div>
+                        <a class="map-btn disabled" id="m2-map" href="#" target="_blank" rel="noopener">🗺️ Itinéraire</a>
+                    </div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Catégorie</div>
+                    <div class="detail-value" id="m2-category">B1 Inter</div>
+                </div>
+            </div>
+            <div class="match-status status-empty" id="m2-status">Aucun match planifié</div>
+        </div>
+
+        <!-- Form 2 -->
+        <div class="form-section" id="form2">
+            <div class="form-title">Modifier – FC Champel</div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Adversaire</label>
+                    <input type="text" id="f2-opponent" placeholder="Ex: FC Lausanne U15">
+                </div>
+                <div class="form-group">
+                    <label>Catégorie</label>
+                    <input type="text" id="f2-category" placeholder="B1 Inter" value="B1 Inter">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Date</label>
+                    <input type="date" id="f2-date">
+                </div>
+                <div class="form-group">
+                    <label>Heure</label>
+                    <input type="time" id="f2-time">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group full">
+                    <label>Lieu / Terrain</label>
+                    <input type="text" id="f2-location" placeholder="Ex: Terrain 1, Champel">
+                </div>
+            </div>
+            <div class="form-actions">
+                <button class="btn-save" onclick="saveMatch(2)">Enregistrer</button>
+                <button class="btn-cancel" onclick="toggleForm(2)">Annuler</button>
+            </div>
+        </div>
+
+        <p class="week-info" id="week-info"></p>
+    </div>
+
+    <script>
+        const STORAGE_KEY = 'matchs-weekend';
+
+        function loadData() {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            if (raw) return JSON.parse(raw);
+            return { m1: null, m2: null };
+        }
+
+        function saveData(data) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '';
+            const d = new Date(dateStr + 'T00:00:00');
+            return d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+        }
+
+        function getStatus(match) {
+            if (!match || !match.date) return { cls: 'status-empty', text: 'Aucun match planifié' };
+            const now = new Date();
+            const matchDate = new Date(match.date + 'T' + (match.time || '12:00'));
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const matchDay = new Date(matchDate.getFullYear(), matchDate.getMonth(), matchDate.getDate());
+
+            if (matchDay < today) return { cls: 'status-past', text: '✓ Match terminé' };
+            if (matchDay.getTime() === today.getTime()) return { cls: 'status-today', text: "🔴 Match aujourd'hui !" };
+            const days = Math.round((matchDay - today) / 86400000);
+            return { cls: 'status-upcoming', text: `⏳ Dans ${days} jour${days > 1 ? 's' : ''}` };
+        }
+
+        function getMapUrl(location) {
+            if (!location) return '#';
+            return 'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(location);
+        }
+
+        function render() {
+            const data = loadData();
+
+            [1, 2].forEach(i => {
+                const m = data['m' + i];
+                const prefix = 'm' + i;
+
+                if (m) {
+                    document.getElementById(prefix + '-opponent').textContent = m.opponent || '—';
+                    document.getElementById(prefix + '-opponent').className = 'detail-value' + (m.opponent ? '' : ' empty');
+
+                    const dt = (m.date ? formatDate(m.date) : '') + (m.time ? ' à ' + m.time : '');
+                    document.getElementById(prefix + '-datetime').textContent = dt || '—';
+                    document.getElementById(prefix + '-datetime').className = 'detail-value' + (dt ? '' : ' empty');
+
+                    document.getElementById(prefix + '-location').textContent = m.location || '—';
+                    document.getElementById(prefix + '-location').className = 'detail-value' + (m.location ? '' : ' empty');
+
+                    document.getElementById(prefix + '-category').textContent = m.category || '—';
+                } else {
+                    [prefix + '-opponent', prefix + '-datetime', prefix + '-location'].forEach(id => {
+                        document.getElementById(id).textContent = '—';
+                        document.getElementById(id).className = 'detail-value empty';
+                    });
+                }
+
+                const mapBtn = document.getElementById(prefix + '-map');
+                if (m && m.location) {
+                    mapBtn.href = getMapUrl(m.location);
+                    mapBtn.classList.remove('disabled');
+                } else {
+                    mapBtn.href = '#';
+                    mapBtn.classList.add('disabled');
+                }
+
+                const status = getStatus(m);
+                const statusEl = document.getElementById(prefix + '-status');
+                statusEl.className = 'match-status ' + status.cls;
+                statusEl.textContent = status.text;
+            });
+
+            const now = new Date();
+            const weekNum = getWeekNumber(now);
+            document.getElementById('week-info').textContent =
+                `Semaine ${weekNum} • ${now.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}`;
+        }
+
+        function getWeekNumber(d) {
+            const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+            const dayNum = date.getUTCDay() || 7;
+            date.setUTCDate(date.getUTCDate() + 4 - dayNum);
+            const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+            return Math.ceil(((date - yearStart) / 86400000 + 1) / 7);
+        }
+
+        function toggleForm(i) {
+            const form = document.getElementById('form' + i);
+            const data = loadData();
+            const m = data['m' + i];
+
+            if (form.classList.contains('active')) {
+                form.classList.remove('active');
+                return;
+            }
+
+            document.getElementById('f' + i + '-opponent').value = m?.opponent || '';
+            document.getElementById('f' + i + '-category').value = m?.category || (i === 1 ? 'D2' : 'B1 Inter');
+            document.getElementById('f' + i + '-date').value = m?.date || '';
+            document.getElementById('f' + i + '-time').value = m?.time || '';
+            document.getElementById('f' + i + '-location').value = m?.location || '';
+
+            form.classList.add('active');
+        }
+
+        function saveMatch(i) {
+            const data = loadData();
+            data['m' + i] = {
+                opponent: document.getElementById('f' + i + '-opponent').value.trim(),
+                category: document.getElementById('f' + i + '-category').value.trim(),
+                date: document.getElementById('f' + i + '-date').value,
+                time: document.getElementById('f' + i + '-time').value,
+                location: document.getElementById('f' + i + '-location').value.trim()
+            };
+            saveData(data);
+            document.getElementById('form' + i).classList.remove('active');
+            render();
+        }
+
+        render();
+    </script>
+</body>
+</html>
